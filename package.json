@@ -1,0 +1,17 @@
+{
+  "name": "ipn-p2p-payment",
+  "version": "1.0.0",
+  "description": "IPN Developer Integration Challenge - P2P Payment Application",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --include=dev --prefix server && npm install --include=dev --prefix client",
+    "dev": "npx concurrently \"npm run server\" \"npm run client\"",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

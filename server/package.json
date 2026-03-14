@@ -1,0 +1,22 @@
+{
+  "name": "ipn-p2p-payment-server",
+  "version": "1.0.0",
+  "description": "Mock API server for IPN P2P Payment Integration",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "jest --verbose",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.2.2"
+  }
+}
