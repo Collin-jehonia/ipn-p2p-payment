@@ -2,12 +2,13 @@
  * IPN P2P Payment - Payment Controller
  *
  * Thin HTTP handler that orchestrates validation, idempotency,
- * and payment processing by delegating to the service layer.
+ * and payment processing by delegating to the service and model layers.
  */
 
 const { validatePaymentRequest } = require("../validators/paymentValidator");
 const { buildErrorResponse } = require("../utils/responseBuilder");
-const { findByClientReference, processPaymentTransaction } = require("../services/transactionService");
+const { processPaymentTransaction } = require("../services/transactionService");
+const TransactionModel = require("../models/transactionModel");
 const ERROR_CODES = require("../config/errorCodes");
 
 /**
@@ -30,9 +31,8 @@ async function processPayment(req, res) {
     }
 
     // Step 2: Check for duplicate clientReference (idempotency)
-    const duplicate = findByClientReference(body.clientReference);
+    const duplicate = TransactionModel.findByClientReference(body.clientReference);
     if (duplicate) {
-      console.log("duplicate", duplicate)
       return res.status(200).json(duplicate);
     }
 

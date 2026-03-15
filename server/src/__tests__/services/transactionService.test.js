@@ -2,16 +2,13 @@
  * Unit Tests — Transaction Service
  *
  * Tests the core business logic layer:
- *   - Idempotency: findByClientReference + saveTransaction
  *   - Payment processing: success path, insufficient funds (ERR005),
  *     internal error (ERR006)
+ *   - Verifies that the service persists transactions via the Model
  */
 
-const {
-  findByClientReference,
-  saveTransaction,
-  processPaymentTransaction,
-} = require("../../services/transactionService");
+const { processPaymentTransaction } = require("../../services/transactionService");
+const TransactionModel = require("../../models/transactionModel");
 
 // Valid baseline payload
 const validPayload = (overrides = {}) => ({
@@ -25,27 +22,6 @@ const validPayload = (overrides = {}) => ({
 });
 
 describe("transactionService", () => {
-  // ─── findByClientReference / saveTransaction ───────────────
-  describe("findByClientReference", () => {
-    test("returns null for an unknown clientReference", () => {
-      expect(findByClientReference("REF-UNKNOWN-999")).toBeNull();
-    });
-
-    test("returns the saved response for a known clientReference", () => {
-      const ref = "REF-IDEMPOTENCY-001";
-      const mockResponse = { status: "SUCCESS", transactionId: "TXN202603140099" };
-      saveTransaction(ref, mockResponse);
-      expect(findByClientReference(ref)).toEqual(mockResponse);
-    });
-
-    test("returns exact same object reference (no cloning)", () => {
-      const ref = "REF-IDEMPOTENCY-002";
-      const mockResponse = { status: "SUCCESS" };
-      saveTransaction(ref, mockResponse);
-      expect(findByClientReference(ref)).toBe(mockResponse);
-    });
-  });
-
   // ─── processPaymentTransaction ─────────────────────────────
   describe("processPaymentTransaction", () => {
     // Success path
@@ -65,10 +41,10 @@ describe("transactionService", () => {
       expect(result1.response.transactionId).not.toBe(result2.response.transactionId);
     });
 
-    test("stores successful transaction for idempotency", () => {
+    test("stores successful transaction in the model for idempotency", () => {
       const payload = validPayload({ clientReference: "REF-STORED-001" });
       const { response } = processPaymentTransaction(payload);
-      const cached = findByClientReference("REF-STORED-001");
+      const cached = TransactionModel.findByClientReference("REF-STORED-001");
       expect(cached).toEqual(response);
     });
 
@@ -86,13 +62,13 @@ describe("transactionService", () => {
       expect(response.message).toBe("Insufficient funds");
     });
 
-    test("stores insufficient funds response for idempotency", () => {
+    test("stores insufficient funds response in the model for idempotency", () => {
       const payload = validPayload({
         senderAccountNumber: "1111111111",
         clientReference: "REF-INSUFF-002",
       });
       processPaymentTransaction(payload);
-      const cached = findByClientReference("REF-INSUFF-002");
+      const cached = TransactionModel.findByClientReference("REF-INSUFF-002");
       expect(cached).not.toBeNull();
       expect(cached.errorCode).toBe("ERR005");
     });
@@ -117,7 +93,7 @@ describe("transactionService", () => {
         clientReference: "REF-INTERR-002",
       });
       processPaymentTransaction(payload);
-      const cached = findByClientReference("REF-INTERR-002");
+      const cached = TransactionModel.findByClientReference("REF-INTERR-002");
       expect(cached).toBeNull();
     });
   });
