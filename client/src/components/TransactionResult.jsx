@@ -25,6 +25,13 @@ function TransactionResult({ result, onDismiss }) {
       <div className="result-body">
         <p className="result-message">{result.message}</p>
 
+        {result.amount != null && (
+          <div className="result-detail">
+            <span className="detail-label">Amount</span>
+            <code className="detail-value">N$ {Number(result.amount).toFixed(2)}</code>
+          </div>
+        )}
+
         {result.clientReference && (
           <div className="result-detail">
             <span className="detail-label">Client Reference</span>

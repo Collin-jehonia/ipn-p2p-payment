@@ -1,0 +1,11 @@
+{
+  "payment": {
+    "validCurrency": "NAD",
+    "minAccountLength": 10,
+    "maxReferenceLength": 50
+  },
+  "simulation": {
+    "insufficientFundsAccount": "1111111111",
+    "internalErrorAccount": "9999999999"
+  }
+}

@@ -5,6 +5,8 @@
  * Returns the first matching error code, or null if validation passes.
  */
 
+const paymentConfig = require("../config/payment-config.json");
+
 const REQUIRED_FIELDS = [
   "clientReference",
   "senderAccountNumber",
@@ -14,9 +16,9 @@ const REQUIRED_FIELDS = [
   "reference",
 ];
 
-const VALID_CURRENCY = "NAD";
-const MIN_ACCOUNT_LENGTH = 10;
-const MAX_REFERENCE_LENGTH = 50;
+const VALID_CURRENCY = paymentConfig.payment.validCurrency;
+const MIN_ACCOUNT_LENGTH = paymentConfig.payment.minAccountLength;
+const MAX_REFERENCE_LENGTH = paymentConfig.payment.maxReferenceLength;
 
 /**
  * Validates the payment request body.
