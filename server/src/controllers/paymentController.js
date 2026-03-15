@@ -32,6 +32,7 @@ async function processPayment(req, res) {
     // Step 2: Check for duplicate clientReference (idempotency)
     const duplicate = findByClientReference(body.clientReference);
     if (duplicate) {
+      console.log("duplicate", duplicate)
       return res.status(200).json(duplicate);
     }
 

@@ -11,10 +11,12 @@ A full-stack Person-to-Person (P2P) payment application built for the **Instant 
 - [Project Structure](#project-structure)
 - [Setup & Installation](#setup--installation)
 - [Running the Application](#running-the-application)
-- [API Specification](#api-specification)
+- [Endpoints](#endpoints)
+- [Response Structure](#response-structure)
 - [Validation Rules](#validation-rules)
 - [Error Codes](#error-codes)
 - [Frontend Features](#frontend-features)
+- [Testing](#testing)
 - [Assumptions](#assumptions)
 - [Integration Details](#integration-details)
 
@@ -156,31 +158,42 @@ npm start
 
 ---
 
-## API Specification
+## Endpoints
 
-### Endpoint
+### POST — P2P Payment
 
-```
-POST /api/p2p-payment
-Content-Type: application/json
-```
+URL: `localhost:3001/api/p2p-payment`
 
-### Request Body
+Method: `POST`
 
-| Field                  | Type   | Required | Constraints                  |
-| ---------------------- | ------ | -------- | ---------------------------- |
-| `clientReference`      | string | Yes      | Unique identifier per request |
-| `senderAccountNumber`  | string | Yes      | Numeric, minimum 10 digits   |
-| `receiverAccountNumber`| string | Yes      | Numeric, minimum 10 digits   |
-| `amount`               | number | Yes      | Greater than 0               |
-| `currency`             | string | Yes      | Must be `"NAD"`              |
-| `reference`            | string | Yes      | Non-empty, max 50 characters |
+Authentication: `Not Required` (mock environment)
 
-### Example Request
+Content-Type: `application/json`
+
+Parameter: | _**localhost:3001**_ | Specifies the link to where the Mock API server is hosted |
+
+Parameter: | _**/api/p2p-payment**_ | Specifies the P2P payment processing endpoint |
+
+#### Request Body Fields
+
+| Field                  | Type   | Required | Constraints                                             |
+| ---------------------- | ------ | -------- | ------------------------------------------------------- |
+| `clientReference`      | string | Yes      | Unique per request, format `REF-YYYYMMDD-NNN`           |
+| `senderAccountNumber`  | string | Yes      | Numeric only, minimum 10 digits                         |
+| `receiverAccountNumber`| string | Yes      | Numeric only, minimum 10 digits                         |
+| `amount`               | number | Yes      | Must be greater than 0, finite                          |
+| `currency`             | string | Yes      | Must be `"NAD"` (Namibian Dollar)                       |
+| `reference`            | string | Yes      | Non-empty, maximum 50 characters                        |
+
+---
+
+### 1. Successful Payment — `200 OK`
+
+**Request Body:**
 
 ```json
 {
-  "clientReference": "REF-20260306-001",
+  "clientReference": "REF-20260315-001",
   "senderAccountNumber": "1234567890",
   "receiverAccountNumber": "0987654321",
   "amount": 150.00,
@@ -189,48 +202,275 @@ Content-Type: application/json
 }
 ```
 
-### Response Structure
-
-| Field           | Type        | Description                        |
-| --------------- | ----------- | ---------------------------------- |
-| `status`        | string      | `"SUCCESS"` or `"FAILED"`          |
-| `errorCode`     | string/null | Error code if failed, null if success |
-| `transactionId` | string/null | Transaction ID if success, null if failed |
-| `message`       | string      | Human-readable result message       |
-
-### Example Success Response
+**Response:**
 
 ```json
 {
   "status": "SUCCESS",
   "errorCode": null,
-  "transactionId": "TXN202603060001",
+  "transactionId": "TXN202603150001",
   "message": "Payment processed successfully"
 }
 ```
 
-### Example Error Response
+---
+
+### 2. Idempotent Duplicate — `200 OK`
+
+Submitting the **same `clientReference`** again returns the **original cached response** with the same `transactionId`. The payment is **not** processed a second time.
+
+**Request Body:**
+
+```json
+{
+  "clientReference": "REF-20260315-001",
+  "senderAccountNumber": "1234567890",
+  "receiverAccountNumber": "0987654321",
+  "amount": 150.00,
+  "currency": "NAD",
+  "reference": "Lunch payment"
+}
+```
+
+**Response:** _(identical to the first submission)_
+
+```json
+{
+  "status": "SUCCESS",
+  "errorCode": null,
+  "transactionId": "TXN202603150001",
+  "message": "Payment processed successfully"
+}
+```
+
+---
+
+### 3. ERR001 — Missing Required Field — `400 Bad Request`
+
+Returned when any of the six required fields is missing, `null`, or an empty string.
+
+**Request Body:**
+
+```json
+{
+  "senderAccountNumber": "1234567890",
+  "receiverAccountNumber": "0987654321",
+  "amount": 100,
+  "currency": "NAD",
+  "reference": "Missing clientReference"
+}
+```
+
+**Response:**
 
 ```json
 {
   "status": "FAILED",
   "errorCode": "ERR001",
   "transactionId": null,
-  "message": "Missing required field: senderAccountNumber"
+  "message": "Missing required field: clientReference"
 }
 ```
 
 ---
 
+### 4. ERR002 — Invalid Account Number — `400 Bad Request`
+
+Returned when an account number is not a numeric string or has fewer than 10 digits.
+
+**Request Body:**
+
+```json
+{
+  "clientReference": "REF-20260315-002",
+  "senderAccountNumber": "12345",
+  "receiverAccountNumber": "0987654321",
+  "amount": 100.00,
+  "currency": "NAD",
+  "reference": "Short sender account"
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "FAILED",
+  "errorCode": "ERR002",
+  "transactionId": null,
+  "message": "Invalid account number format: senderAccountNumber"
+}
+```
+
+---
+
+### 5. ERR003 — Invalid Currency — `400 Bad Request`
+
+Returned when the currency is anything other than `"NAD"`.
+
+**Request Body:**
+
+```json
+{
+  "clientReference": "REF-20260315-003",
+  "senderAccountNumber": "1234567890",
+  "receiverAccountNumber": "0987654321",
+  "amount": 100.00,
+  "currency": "USD",
+  "reference": "Wrong currency"
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "FAILED",
+  "errorCode": "ERR003",
+  "transactionId": null,
+  "message": "Invalid currency: currency"
+}
+```
+
+---
+
+### 6. ERR004 — Invalid Amount — `400 Bad Request`
+
+Returned when the amount is zero, negative, not a number, or not finite.
+
+**Request Body:**
+
+```json
+{
+  "clientReference": "REF-20260315-004",
+  "senderAccountNumber": "1234567890",
+  "receiverAccountNumber": "0987654321",
+  "amount": -50,
+  "currency": "NAD",
+  "reference": "Negative amount"
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "FAILED",
+  "errorCode": "ERR004",
+  "transactionId": null,
+  "message": "Invalid amount: amount"
+}
+```
+
+---
+
+### 7. ERR005 — Insufficient Funds — `402 Payment Required`
+
+Simulated when the sender account number is `1111111111`.
+
+**Request Body:**
+
+```json
+{
+  "clientReference": "REF-20260315-005",
+  "senderAccountNumber": "1111111111",
+  "receiverAccountNumber": "0987654321",
+  "amount": 500.00,
+  "currency": "NAD",
+  "reference": "Insufficient funds test"
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "FAILED",
+  "errorCode": "ERR005",
+  "transactionId": null,
+  "message": "Insufficient funds"
+}
+```
+
+---
+
+### 8. ERR006 — Internal Processing Error — `500 Internal Server Error`
+
+Simulated when the sender account number is `9999999999`.
+
+**Request Body:**
+
+```json
+{
+  "clientReference": "REF-20260315-006",
+  "senderAccountNumber": "9999999999",
+  "receiverAccountNumber": "0987654321",
+  "amount": 200.00,
+  "currency": "NAD",
+  "reference": "Internal error test"
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "FAILED",
+  "errorCode": "ERR006",
+  "transactionId": null,
+  "message": "Internal processing error"
+}
+```
+
+---
+
+### GET — Health Check
+
+URL: `localhost:3001/health`
+
+Method: `GET`
+
+Authentication: `Not Required`
+
+Parameter: | _**localhost:3001**_ | Specifies the link to where the Mock API server is hosted |
+
+Parameter: | _**/health**_ | Specifies the health check endpoint |
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-15T10:30:00.000Z"
+}
+```
+
+---
+
+## Response Structure
+
+All responses from `POST /api/p2p-payment` follow a consistent structure:
+
+| Field           | Type        | Description                                           |
+| --------------- | ----------- | ----------------------------------------------------- |
+| `status`        | string      | `"SUCCESS"` or `"FAILED"`                             |
+| `errorCode`     | string/null | Error code if failed (e.g. `ERR001`), `null` if success |
+| `transactionId` | string/null | Transaction ID if success (e.g. `TXN202603150001`), `null` if failed |
+| `message`       | string      | Human-readable result message                          |
+
+---
+
 ## Validation Rules
 
-The server validates requests in the following order:
+The server validates requests in the following priority order. The **first** validation failure encountered is returned:
 
-1. **Required fields** — All six fields must be present and non-empty (`ERR001`)
-2. **Account numbers** — Must be numeric strings with at least 10 digits (`ERR002`)
-3. **Currency** — Must be exactly `"NAD"` (`ERR003`)
-4. **Amount** — Must be a positive finite number (`ERR004`)
-5. **Reference length** — Must not exceed 50 characters (`ERR001`)
+| Priority | Rule                       | Error Code | HTTP Status |
+| -------- | -------------------------- | ---------- | ----------- |
+| 1        | All six fields must be present and non-empty | ERR001 | 400 |
+| 2        | Account numbers must be numeric strings, min 10 digits | ERR002 | 400 |
+| 3        | Currency must be exactly `"NAD"` | ERR003 | 400 |
+| 4        | Amount must be a positive finite number | ERR004 | 400 |
+| 5        | Reference must not exceed 50 characters | ERR001 | 400 |
 
 The client performs the same validation before submitting, providing immediate user feedback.
 
@@ -238,14 +478,14 @@ The client performs the same validation before submitting, providing immediate u
 
 ## Error Codes
 
-| Code   | HTTP Status | Description                    |
-| ------ | ----------- | ------------------------------ |
-| ERR001 | 400         | Missing required field          |
-| ERR002 | 400         | Invalid account number format   |
-| ERR003 | 400         | Invalid currency                |
-| ERR004 | 400         | Invalid amount                  |
-| ERR005 | 402         | Insufficient funds              |
-| ERR006 | 500         | Internal processing error       |
+| Code   | HTTP Status | Description                    | Trigger                                        |
+| ------ | ----------- | ------------------------------ | ---------------------------------------------- |
+| ERR001 | 400         | Missing required field          | Any of the 6 fields is missing, null, or empty |
+| ERR002 | 400         | Invalid account number format   | Non-numeric or fewer than 10 digits            |
+| ERR003 | 400         | Invalid currency                | Currency is not `"NAD"`                        |
+| ERR004 | 400         | Invalid amount                  | Zero, negative, NaN, Infinity, or non-number   |
+| ERR005 | 402         | Insufficient funds              | Sender account `1111111111` (simulated)        |
+| ERR006 | 500         | Internal processing error       | Sender account `9999999999` (simulated) or unhandled server error |
 
 ---
 
@@ -374,16 +614,48 @@ server: {
 }
 ```
 
-### Testing the API Directly
+### Testing
 
-You can test the mock API using curl:
+#### Unit & Integration Tests
+
+The project includes **133 automated tests** across server and client:
+
+```bash
+# Run server tests (80 tests — Jest + supertest)
+cd server && npm test
+
+# Run client tests (53 tests — Vitest + React Testing Library)
+cd client && npm test
+```
+
+**Server test suites:**
+
+| Suite | Tests | Coverage |
+| ----- | ----- | -------- |
+| `paymentValidator.test.js` | 28 | All ERR001–ERR004 validation paths, edge cases |
+| `responseBuilder.test.js` | 10 | Success/error response structure |
+| `transactionIdGenerator.test.js` | 6 | TXN ID format, sequencing, date |
+| `transactionService.test.js` | 9 | Idempotency, success, ERR005, ERR006 |
+| `payment.test.js` (integration) | 27 | Full HTTP lifecycle through Express |
+
+**Client test suites:**
+
+| Suite | Tests | Coverage |
+| ----- | ----- | -------- |
+| `PaymentForm.test.jsx` | 23 | Rendering, validation, submission, loading, reset |
+| `TransactionResult.test.jsx` | 15 | Success/error display, dismiss |
+| `TransactionHistory.test.jsx` | 15 | Table rendering, formatting, empty state |
+
+#### Testing the API with curl
+
+See the [Endpoints](#endpoints) section above for full request/response examples. Quick test:
 
 ```bash
 # Successful payment
 curl -X POST http://localhost:3001/api/p2p-payment \
   -H "Content-Type: application/json" \
   -d '{
-    "clientReference": "REF-20260314-001",
+    "clientReference": "REF-20260315-001",
     "senderAccountNumber": "1234567890",
     "receiverAccountNumber": "0987654321",
     "amount": 150.00,
@@ -391,41 +663,7 @@ curl -X POST http://localhost:3001/api/p2p-payment \
     "reference": "Lunch payment"
   }'
 
-# Insufficient funds (sender account 1111111111)
-curl -X POST http://localhost:3001/api/p2p-payment \
-  -H "Content-Type: application/json" \
-  -d '{
-    "clientReference": "REF-20260314-002",
-    "senderAccountNumber": "1111111111",
-    "receiverAccountNumber": "0987654321",
-    "amount": 100,
-    "currency": "NAD",
-    "reference": "Will fail - insufficient funds"
-  }'
-
-# Missing required field
-curl -X POST http://localhost:3001/api/p2p-payment \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 100}'
-
-# Idempotency test (re-submit same clientReference — returns cached result)
-curl -X POST http://localhost:3001/api/p2p-payment \
-  -H "Content-Type: application/json" \
-  -d '{
-    "clientReference": "REF-20260314-001",
-    "senderAccountNumber": "1234567890",
-    "receiverAccountNumber": "0987654321",
-    "amount": 150.00,
-    "currency": "NAD",
-    "reference": "Lunch payment"
-  }'
-```
-
-### Health Check
-
-```bash
+# Health check
 curl http://localhost:3001/health
-# {"status":"ok","timestamp":"2026-03-14T..."}
 ```
 
----

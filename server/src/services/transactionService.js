@@ -47,6 +47,8 @@ function saveTransaction(clientReference, response) {
 function processPaymentTransaction(paymentData) {
   const { clientReference, senderAccountNumber } = paymentData;
 
+  console.log("paymentData", paymentData)
+
   // Simulate insufficient funds for test account
   if (senderAccountNumber === INSUFFICIENT_FUNDS_ACCOUNT) {
     const response = buildErrorResponse("ERR005", ERROR_CODES.ERR005.message);
