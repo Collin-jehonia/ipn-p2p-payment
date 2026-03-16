@@ -41,11 +41,11 @@ describe("PaymentForm", () => {
       expect(screen.getByText("Reset")).toBeInTheDocument();
     });
 
-    test("pre-fills currency as NAD (read-only)", () => {
+    test("pre-fills currency as NAD with dropdown options", () => {
       render(<PaymentForm onSubmit={() => {}} isLoading={false} />);
-      const currencyInput = screen.getByLabelText("Currency");
-      expect(currencyInput.value).toBe("NAD");
-      expect(currencyInput).toBeDisabled();
+      const currencySelect = screen.getByLabelText("Currency");
+      expect(currencySelect.value).toBe("NAD");
+      expect(currencySelect.tagName).toBe("SELECT");
     });
 
     test("displays character count for reference field", () => {
