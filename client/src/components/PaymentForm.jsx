@@ -154,14 +154,19 @@ function PaymentForm({ onSubmit, isLoading }) {
 
         <div className="form-group">
           <label htmlFor="currency">Currency</label>
-          <input
+          <select
             id="currency"
             name="currency"
-            type="text"
             value={form.currency}
-            readOnly
-            disabled
-          />
+            onChange={handleChange}
+            disabled={isLoading}
+          >
+            <option value="NAD">NAD - Namibian Dollar</option>
+            <option value="ZAR">ZAR - South African Rand</option>
+            <option value="USD">USD - US Dollar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="GBP">GBP - British Pound</option>
+          </select>
           {errors.currency && <span className="field-error">{errors.currency}</span>}
         </div>
       </div>

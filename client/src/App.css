@@ -99,9 +99,27 @@
   background: #fff;
 }
 
-.form-group input:disabled {
+.form-group input:disabled,
+.form-group select:disabled {
   background: #f0f0f0;
   cursor: not-allowed;
+}
+
+.form-group select {
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid #d0d5dd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fafbfc;
+  cursor: pointer;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #004d99;
+  box-shadow: 0 0 0 3px rgba(0, 77, 153, 0.12);
+  background: #fff;
 }
 
 .form-row {
