@@ -184,7 +184,14 @@ function PaymentForm({ onSubmit, isLoading }) {
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={isLoading}>
-          {isLoading ? "Processing..." : "Submit Payment"}
+          {isLoading ? (
+            <>
+              <span className="spinner" />
+              Processing...
+            </>
+          ) : (
+            "Submit Payment"
+          )}
         </button>
         <button
           type="button"

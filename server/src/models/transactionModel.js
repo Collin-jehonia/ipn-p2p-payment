@@ -1,43 +1,35 @@
-/**
- * IPN P2P Payment - Transaction Model
- *
- * Class-based data-access layer that handles in-memory storage
- * and retrieval of processed transactions. Separates persistence
- * concerns from business logic.
- */
+// IPN P2P Payment - Transaction Model
+// Class-based data-access layer that handles in-memory storage
+// and retrieval of processed transactions.
+
+const { logInfo, logWarning } = require("../utils/logger");
 
 class TransactionModel {
   constructor() {
-    // In-memory store for processed transactions (simulates a database)
     this.processedTransactions = new Map();
   }
 
-  /**
-   * Finds a transaction response by clientReference.
-   * @param {string} clientReference
-   * @returns {Object|null} The stored response or null if not found
-   */
+  // Finds a transaction response by clientReference
   findByClientReference(clientReference) {
-    return this.processedTransactions.get(clientReference) || null;
+    const result = this.processedTransactions.get(clientReference) || null;
+    if (result) {
+      logInfo("Transaction found in store");
+    }
+    return result;
   }
 
-  /**
-   * Saves a transaction response keyed by clientReference.
-   * @param {string} clientReference
-   * @param {Object} response
-   */
+  // Saves a transaction response keyed by clientReference
   save(clientReference, response) {
     this.processedTransactions.set(clientReference, response);
+    logInfo(`Transaction saved to store | status=${response.status}`);
   }
 
-  /**
-   * Clears all stored transactions. Useful for test isolation.
-   */
+  // Clears all stored transactions (used for test isolation)
   clearAll() {
+    logWarning("Clearing all stored transactions");
     this.processedTransactions.clear();
   }
 }
 
-// Singleton instance shared across the application
 const transactionModel = new TransactionModel();
 module.exports = transactionModel;

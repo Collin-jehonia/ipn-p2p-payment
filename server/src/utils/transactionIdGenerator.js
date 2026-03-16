@@ -1,16 +1,11 @@
-/**
- * IPN P2P Payment - Transaction ID Generator
- *
- * Generates sequential transaction IDs in the format TXN + YYYYMMDD + sequential number.
- * Example: "TXN202603060001"
- */
+// IPN P2P Payment - Transaction ID Generator
+// Generates sequential transaction IDs in format TXNYYYYMMDDnnnn
+
+const { logInfo } = require("./logger");
 
 let transactionCounter = 0;
 
-/**
- * Generates the next sequential transaction ID.
- * @returns {string} Transaction ID in format TXNYYYYMMDDnnnn
- */
+// Generates the next sequential transaction ID
 function generateTransactionId() {
   transactionCounter++;
   const now = new Date();
@@ -18,7 +13,9 @@ function generateTransactionId() {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   const seq = String(transactionCounter).padStart(4, "0");
-  return `TXN${year}${month}${day}${seq}`;
+  const transactionId = `TXN${year}${month}${day}${seq}`;
+  logInfo(`Generating transaction ID | txnId=${transactionId}`);
+  return transactionId;
 }
 
 module.exports = { generateTransactionId };
