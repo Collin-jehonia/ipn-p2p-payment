@@ -192,7 +192,7 @@ describe("paymentValidator — validatePaymentRequest", () => {
       const payload = validPayload();
       payload.reference = "A".repeat(51);
       const result = validatePaymentRequest(payload);
-      expect(result).toEqual({ errorCode: "ERR001", field: "reference" });
+      expect(result).toEqual({ errorCode: "ERR001", field: "reference (max 50 characters)" });
     });
 
     test("accepts reference with exactly 50 characters", () => {
