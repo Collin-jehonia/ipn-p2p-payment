@@ -64,6 +64,47 @@ cd server && npm test
 cd client && npm test
 ```
 
+## Running with Docker
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** installed
+
+### Start the application
+
+```bash
+docker-compose up --build
+```
+
+This builds and starts two containers:
+- **ipn-p2p-server** — Express Mock API on `http://localhost:3001`
+- **ipn-p2p-client** — React frontend (Nginx) on `http://localhost:8080`
+
+### Stop the application
+
+```bash
+docker-compose down
+```
+
+### Run in detached mode
+
+```bash
+docker-compose up --build -d
+```
+
+### View logs
+
+```bash
+# All services
+docker-compose logs -f
+
+# Server only
+docker-compose logs -f server
+
+# Client only
+docker-compose logs -f client
+```
+
 ## Troubleshooting
 
 | Issue | Solution |
@@ -72,4 +113,5 @@ cd client && npm test
 | `nodemon: command not found` | Run `npm install --include=dev --prefix server` |
 | Port 3001 already in use | Kill the process on port 3001: `lsof -ti:3001 \| xargs kill` |
 | Port 5173 already in use | Vite will auto-select the next available port |
+| Port 8080 already in use (Docker) | Change the client port in `docker-compose.yml` |
 | CORS errors in browser | Ensure the server is running — Vite proxies `/api/*` to `localhost:3001` |

@@ -179,6 +179,51 @@ npm run build
 npm start
 ```
 
+### Running with Docker
+
+If you prefer to run the application using Docker, make sure you have **Docker** and **Docker Compose** installed.
+
+#### Start the application
+
+```bash
+docker-compose up --build
+```
+
+This builds and starts two containers:
+- **ipn-p2p-server** — Express Mock API server on `http://localhost:3001`
+- **ipn-p2p-client** — React frontend (served via Nginx) on `http://localhost:8080`
+
+The client container proxies `/api/*` requests to the server container automatically.
+
+#### Stop the application
+
+```bash
+docker-compose down
+```
+
+#### Run in detached mode (background)
+
+```bash
+docker-compose up --build -d
+```
+
+#### View logs
+
+```bash
+# All services
+docker-compose logs -f
+
+# Server only
+docker-compose logs -f server
+
+# Client only
+docker-compose logs -f client
+```
+
+#### Health check
+
+The server container includes a health check that hits `http://localhost:3001/health` every 30 seconds. The client container waits for the server to be healthy before starting.
+
 ---
 
 ## Endpoints
