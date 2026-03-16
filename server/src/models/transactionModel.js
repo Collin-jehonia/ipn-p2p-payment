@@ -1,36 +1,35 @@
-/**
- * IPN P2P Payment - Transaction Model
- *
- * Handles in-memory storage and retrieval of processed transactions.
- * Provides a data-access layer that separates persistence from business logic.
- */
+// IPN P2P Payment - Transaction Model
+// Class-based data-access layer that handles in-memory storage
+// and retrieval of processed transactions.
 
-// In-memory store for processed transactions (simulates a database)
-const processedTransactions = new Map();
+const { logInfo, logWarning } = require("../utils/logger");
 
-/**
- * Finds a transaction response by clientReference.
- * @param {string} clientReference
- * @returns {Object|null} The stored response or null if not found
- */
-function findByClientReference(clientReference) {
-  return processedTransactions.get(clientReference) || null;
+class TransactionModel {
+  constructor() {
+    this.processedTransactions = new Map();
+  }
+
+  // Finds a transaction response by clientReference
+  findByClientReference(clientReference) {
+    const result = this.processedTransactions.get(clientReference) || null;
+    if (result) {
+      logInfo("Transaction found in store");
+    }
+    return result;
+  }
+
+  // Saves a transaction response keyed by clientReference
+  save(clientReference, response) {
+    this.processedTransactions.set(clientReference, response);
+    logInfo(`Transaction saved to store | status=${response.status}`);
+  }
+
+  // Clears all stored transactions (used for test isolation)
+  clearAll() {
+    logWarning("Clearing all stored transactions");
+    this.processedTransactions.clear();
+  }
 }
 
-/**
- * Saves a transaction response keyed by clientReference.
- * @param {string} clientReference
- * @param {Object} response
- */
-function save(clientReference, response) {
-  processedTransactions.set(clientReference, response);
-}
-
-/**
- * Clears all stored transactions. Useful for test isolation.
- */
-function clearAll() {
-  processedTransactions.clear();
-}
-
-module.exports = { findByClientReference, save, clearAll };
+const transactionModel = new TransactionModel();
+module.exports = transactionModel;

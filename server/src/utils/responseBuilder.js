@@ -1,17 +1,10 @@
-/**
- * IPN P2P Payment - Response Builder Utility
- *
- * Provides standardised response builders for the API.
- * Ensures consistent response format across all controllers.
- */
+// IPN P2P Payment - Response Builder Utility
 
-/**
- * Builds a standardised success response.
- * @param {string} transactionId - The generated transaction ID
- * @param {string} [message="Payment processed successfully"]
- * @returns {Object}
- */
+const { logInfo } = require("./logger");
+
+// Builds a standardised success response
 function buildSuccessResponse(transactionId, message = "Payment processed successfully") {
+  logInfo(`Building success response | txnId=${transactionId}`);
   return {
     status: "SUCCESS",
     errorCode: null,
@@ -20,13 +13,9 @@ function buildSuccessResponse(transactionId, message = "Payment processed succes
   };
 }
 
-/**
- * Builds a standardised error response.
- * @param {string} errorCode - The error code (e.g. "ERR001")
- * @param {string} message - Human-readable error message
- * @returns {Object}
- */
+// Builds a standardised error response
 function buildErrorResponse(errorCode, message) {
+  logInfo(`Building error response | errorCode=${errorCode}`);
   return {
     status: "FAILED",
     errorCode,

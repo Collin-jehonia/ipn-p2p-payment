@@ -7,7 +7,7 @@
  *   - Verifies that the service persists transactions via the Model
  */
 
-const { processPaymentTransaction } = require("../../services/transactionService");
+const transactionService = require("../../services/transactionService");
 const TransactionModel = require("../../models/transactionModel");
 
 // Valid baseline payload
@@ -27,7 +27,7 @@ describe("transactionService", () => {
     // Success path
     test("returns httpStatus 200 and SUCCESS status for valid payment", () => {
       const payload = validPayload();
-      const { httpStatus, response } = processPaymentTransaction(payload);
+      const { httpStatus, response } = transactionService.processPaymentTransaction(payload);
       expect(httpStatus).toBe(200);
       expect(response.status).toBe("SUCCESS");
       expect(response.errorCode).toBeNull();
@@ -36,14 +36,14 @@ describe("transactionService", () => {
     });
 
     test("generates a unique transactionId per call", () => {
-      const result1 = processPaymentTransaction(validPayload());
-      const result2 = processPaymentTransaction(validPayload());
+      const result1 = transactionService.processPaymentTransaction(validPayload());
+      const result2 = transactionService.processPaymentTransaction(validPayload());
       expect(result1.response.transactionId).not.toBe(result2.response.transactionId);
     });
 
     test("stores successful transaction in the model for idempotency", () => {
       const payload = validPayload({ clientReference: "REF-STORED-001" });
-      const { response } = processPaymentTransaction(payload);
+      const { response } = transactionService.processPaymentTransaction(payload);
       const cached = TransactionModel.findByClientReference("REF-STORED-001");
       expect(cached).toEqual(response);
     });
@@ -54,7 +54,7 @@ describe("transactionService", () => {
         senderAccountNumber: "1111111111",
         clientReference: "REF-INSUFF-001",
       });
-      const { httpStatus, response } = processPaymentTransaction(payload);
+      const { httpStatus, response } = transactionService.processPaymentTransaction(payload);
       expect(httpStatus).toBe(402);
       expect(response.status).toBe("FAILED");
       expect(response.errorCode).toBe("ERR005");
@@ -67,7 +67,7 @@ describe("transactionService", () => {
         senderAccountNumber: "1111111111",
         clientReference: "REF-INSUFF-002",
       });
-      processPaymentTransaction(payload);
+      transactionService.processPaymentTransaction(payload);
       const cached = TransactionModel.findByClientReference("REF-INSUFF-002");
       expect(cached).not.toBeNull();
       expect(cached.errorCode).toBe("ERR005");
@@ -79,7 +79,7 @@ describe("transactionService", () => {
         senderAccountNumber: "9999999999",
         clientReference: "REF-INTERR-001",
       });
-      const { httpStatus, response } = processPaymentTransaction(payload);
+      const { httpStatus, response } = transactionService.processPaymentTransaction(payload);
       expect(httpStatus).toBe(500);
       expect(response.status).toBe("FAILED");
       expect(response.errorCode).toBe("ERR006");
@@ -92,7 +92,7 @@ describe("transactionService", () => {
         senderAccountNumber: "9999999999",
         clientReference: "REF-INTERR-002",
       });
-      processPaymentTransaction(payload);
+      transactionService.processPaymentTransaction(payload);
       const cached = TransactionModel.findByClientReference("REF-INTERR-002");
       expect(cached).toBeNull();
     });

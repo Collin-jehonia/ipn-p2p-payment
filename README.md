@@ -70,8 +70,10 @@ ipn-p2p-payment/
 │       │   └── paymentRouter.js    # Route definitions
 │       ├── controllers/
 │       │   └── paymentController.js # HTTP request/response handling
+│       ├── models/
+│       │   └── transactionModel.js # Data storage & retrieval (in-memory)
 │       ├── services/
-│       │   └── transactionService.js # Business logic & transaction processing
+│       │   └── transactionService.js # Business logic & payment processing
 │       ├── validators/
 │       │   └── paymentValidator.js  # Request validation rules
 │       ├── utils/
@@ -587,7 +589,9 @@ Routes (paymentRouter.js)          → HTTP route definitions
   ↓
 Controllers (paymentController.js) → Request/response handling, orchestration
   ↓
-Services (transactionService.js)   → Business logic, transaction processing
+Services (transactionService.js)   → Business logic, payment processing
+  ↓
+Models (transactionModel.js)       → Data storage & retrieval (in-memory)
   ↓
 Validators (paymentValidator.js)   → Input validation rules
   ↓
@@ -618,10 +622,10 @@ server: {
 
 #### Unit & Integration Tests
 
-The project includes **133 automated tests** across server and client:
+The project includes **135 automated tests** across server and client:
 
 ```bash
-# Run server tests (80 tests — Jest + supertest)
+# Run server tests (82 tests — Jest + supertest)
 cd server && npm test
 
 # Run client tests (53 tests — Vitest + React Testing Library)
@@ -635,7 +639,8 @@ cd client && npm test
 | `paymentValidator.test.js` | 28 | All ERR001–ERR004 validation paths, edge cases |
 | `responseBuilder.test.js` | 10 | Success/error response structure |
 | `transactionIdGenerator.test.js` | 6 | TXN ID format, sequencing, date |
-| `transactionService.test.js` | 9 | Idempotency, success, ERR005, ERR006 |
+| `transactionModel.test.js` | 5 | Model CRUD: find, save, clearAll |
+| `transactionService.test.js` | 7 | Business logic: success, ERR005, ERR006 |
 | `payment.test.js` (integration) | 27 | Full HTTP lifecycle through Express |
 
 **Client test suites:**

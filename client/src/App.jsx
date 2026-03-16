@@ -2,7 +2,7 @@ import { useState } from "react";
 import PaymentForm from "./components/PaymentForm";
 import TransactionResult from "./components/TransactionResult";
 import TransactionHistory from "./components/TransactionHistory";
-import { submitPayment } from "./services/paymentService";
+import paymentAPI from "./services/paymentService";
 import "./App.css";
 
 function App() {
@@ -15,13 +15,13 @@ function App() {
     setResult(null);
 
     try {
-      const data = await submitPayment(payload);
-      const resultWithRef = { ...data, clientReference: payload.clientReference };
+      const data = await paymentAPI.submitPayment(payload);
+      const resultWithRef = { ...data, clientReference: payload.clientReference, amount: payload.amount };
       setResult(resultWithRef);
       addToHistory(payload, data);
     } catch (error) {
       if (error.response && error.response.data) {
-        const resultWithRef = { ...error.response.data, clientReference: payload.clientReference };
+        const resultWithRef = { ...error.response.data, clientReference: payload.clientReference, amount: payload.amount };
         setResult(resultWithRef);
         addToHistory(payload, error.response.data);
       } else {
@@ -31,6 +31,7 @@ function App() {
           transactionId: null,
           message: "Unable to reach the payment server. Please check your connection.",
           clientReference: payload.clientReference,
+          amount: payload.amount,
         };
         setResult(networkError);
         addToHistory(payload, networkError);
