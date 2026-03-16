@@ -1,0 +1,32 @@
+services:
+  server:
+    container_name: ipn-p2p-server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  client:
+    container_name: ipn-p2p-client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      server:
+        condition: service_healthy
+
+networks:
+  default:
+    name: ipn-p2p-network

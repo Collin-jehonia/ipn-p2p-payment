@@ -4,11 +4,21 @@
 
 ### 1. Start the Application
 
+**Option A — Local (Node.js)**
+
 ```bash
 npm run dev
 ```
 
 Open your browser at `http://localhost:5173`.
+
+**Option B — Docker**
+
+```bash
+docker-compose up --build
+```
+
+Open your browser at `http://localhost:8080`.
 
 ### 2. Make a Payment
 
@@ -19,7 +29,7 @@ Fill in the payment form:
 | Sender Account Number | `1234567890` | Numeric, at least 10 digits |
 | Receiver Account Number | `0987654321` | Numeric, at least 10 digits |
 | Amount | `150.00` | Must be greater than 0 |
-| Currency | `NAD` | Locked to Namibian Dollar |
+| Currency | `NAD` | Dropdown — only NAD accepted by server |
 | Payment Reference | `Rent payment March` | Max 50 characters |
 
 Click **Submit Payment** — the button shows a loading spinner while processing.
@@ -46,6 +56,9 @@ Use sender account `1111111111` — simulates a balance check failure.
 
 ### Internal Server Error (ERR006)
 Use sender account `9999999999` — simulates an infrastructure failure.
+
+### Invalid Currency (ERR003)
+Select any currency other than NAD from the dropdown (e.g. USD, ZAR) — server rejects it.
 
 ### Validation Errors
 - Leave any field empty — **ERR001** (Missing required field)
